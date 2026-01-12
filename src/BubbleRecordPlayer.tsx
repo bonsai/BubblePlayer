@@ -1,8 +1,41 @@
 import { useRef, useMemo, useState } from 'react'
 import { useFrame, ThreeEvent } from '@react-three/fiber'
 import * as THREE from 'three'
-import { Sphere, MeshTransmissionMaterial, Text } from '@react-three/drei'
+import { Sphere, MeshTransmissionMaterial, Text, useTexture } from '@react-three/drei'
 import { useMusicStore, Track } from './store'
+
+// 流体テクスチャを生成
+function createFluidTexture() {
+  const canvas = document.createElement('canvas')
+  canvas.width = 256
+  canvas.height = 256
+  const ctx = canvas.getContext('2d')!
+  
+  // グラデーション背景
+  const gradient = ctx.createLinearGradient(0, 0, 256, 256)
+  gradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)')
+  gradient.addColorStop(0.5, 'rgba(200, 200, 255, 0.2)')
+  gradient.addColorStop(1, 'rgba(255, 255, 255, 0.3)')
+  ctx.fillStyle = gradient
+  ctx.fillRect(0, 0, 256, 256)
+  
+  // ノイズパターン
+  for (let i = 0; i < 100; i++) {
+    const x = Math.random() * 256
+    const y = Math.random() * 256
+    const size = Math.random() * 30 + 10
+    const opacity = Math.random() * 0.3 + 0.1
+    ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`
+    ctx.beginPath()
+    ctx.arc(x, y, size, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.magFilter = THREE.LinearFilter
+  texture.minFilter = THREE.LinearFilter
+  return texture
+}
 
 interface FloatingBubbleProps {
   track: Track
@@ -13,8 +46,10 @@ interface FloatingBubbleProps {
 
 function FloatingBubble({ track, position, delay, onSelect }: FloatingBubbleProps) {
   const meshRef = useRef<THREE.Mesh>(null)
+  const fluidRef = useRef<THREE.Mesh>(null)
   const time = useRef(delay)
   const [hovered, setHovered] = useState(false)
+  const fluidTexture = useMemo(() => createFluidTexture(), [])
   
   useFrame((state, delta) => {
     if (!meshRef.current) return
@@ -37,6 +72,12 @@ function FloatingBubble({ track, position, delay, onSelect }: FloatingBubbleProp
       new THREE.Vector3(targetScale, targetScale, targetScale),
       delta * 5
     )
+    
+    // 流体の回転
+    if (fluidRef.current) {
+      fluidRef.current.rotation.z += delta * 0.5
+      fluidRef.current.rotation.x += delta * 0.2
+    }
   })
 
   const handleClick = (e: ThreeEvent<MouseEvent>) => {
@@ -69,6 +110,24 @@ function FloatingBubble({ track, position, delay, onSelect }: FloatingBubbleProp
         />
       </Sphere>
       
+      {/* 内部の流体エフェクト */}
+      <Sphere 
+        ref={fluidRef}
+        args={[0.23, 32, 32]} 
+        position={position}
+        scale={0.95}
+      >
+        <meshStandardMaterial
+          map={fluidTexture}
+          color={track.color}
+          emissive={track.color}
+          emissiveIntensity={hovered ? 1.5 : 0.6}
+          transparent
+          opacity={0.4}
+          side={THREE.BackSide}
+        />
+      </Sphere>
+      
       {hovered && (
         <Text
           position={[position[0], position[1] - 0.5, position[2]]}
@@ -87,7 +146,9 @@ function FloatingBubble({ track, position, delay, onSelect }: FloatingBubbleProp
 function RecordBubble({ track, isPlaying }: { track: Track; isPlaying: boolean }) {
   const groupRef = useRef<THREE.Group>(null)
   const bubbleRef = useRef<THREE.Mesh>(null)
+  const fluidRef = useRef<THREE.Mesh>(null)
   const time = useRef(0)
+  const fluidTexture = useMemo(() => createFluidTexture(), [])
   
   useFrame((state, delta) => {
     if (!groupRef.current || !bubbleRef.current) return
@@ -108,6 +169,12 @@ function RecordBubble({ track, isPlaying }: { track: Track; isPlaying: boolean }
     if (material.emissiveIntensity !== undefined) {
       const intensity = isPlaying ? 1.5 + Math.sin(time.current * 3) * 0.5 : 0.5
       material.emissiveIntensity = intensity
+    }
+    
+    // 流体の回転
+    if (fluidRef.current) {
+      fluidRef.current.rotation.z += delta * 0.3
+      fluidRef.current.rotation.x += delta * 0.15
     }
   })
 
@@ -162,6 +229,24 @@ function RecordBubble({ track, isPlaying }: { track: Track; isPlaying: boolean }
           color={track.color}
           emissive={track.color}
           emissiveIntensity={isPlaying ? 2 : 0.5}
+        />
+      </Sphere>
+      
+      {/* 内部の流体エフェクト */}
+      <Sphere 
+        ref={fluidRef}
+        args={[0.55, 32, 32]} 
+        position={[0, 0.8, 0]}
+        scale={0.95}
+      >
+        <meshStandardMaterial
+          map={fluidTexture}
+          color={track.color}
+          emissive={track.color}
+          emissiveIntensity={isPlaying ? 1.2 : 0.4}
+          transparent
+          opacity={0.5}
+          side={THREE.BackSide}
         />
       </Sphere>
     </group>
