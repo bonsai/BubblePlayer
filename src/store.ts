@@ -16,12 +16,10 @@ interface MusicState {
 }
 
 const TRACKS: Track[] = [
-  { id: 1, title: '夜の海', color: '#4169E1', audioUrl: '/dummy1.wav' },
-  { id: 2, title: '朝焼け', color: '#FF6B6B', audioUrl: '/dummy2.wav' },
-  { id: 3, title: '森の中', color: '#51CF66', audioUrl: '/dummy3.wav' },
-  { id: 4, title: '星空', color: '#9775FA', audioUrl: '/dummy4.wav' },
-  { id: 5, title: '夕暮れ', color: '#FFA94D', audioUrl: '/dummy5.wav' },
-  { id: 6, title: '雨音', color: '#74C0FC', audioUrl: '/dummy6.wav' },
+  { id: 1, title: 'Bollywood GQOM', color: '#4169E1', audioUrl: '/tracks/track1.wav' },
+  { id: 2, title: 'Complex Funky Tech', color: '#FF6B6B', audioUrl: '/tracks/track2.wav' },
+  { id: 3, title: 'DNB Remix', color: '#51CF66', audioUrl: '/tracks/track3.wav' },
+  { id: 4, title: 'Dubby DNB', color: '#9775FA', audioUrl: '/tracks/track4.wav' },
 ]
 
 export const useMusicStore = create<MusicState>((set) => ({
