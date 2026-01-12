@@ -29,12 +29,23 @@ export const useMusicStore = create<MusicState>((set, get) => ({
   currentTrack: TRACKS[0],
   isPlaying: false,
   audioRef: null,
-  setAudioRef: (ref) => set({ audioRef: ref }),
+  setAudioRef: (ref) => {
+    console.log('[Audio] Audio element initialized', ref)
+    set({ audioRef: ref })
+  },
   setCurrentTrack: (track) => {
     const state = get()
+    console.log('[Audio] Switching to track:', track.title, 'URL:', track.audioUrl)
     if (state.audioRef) {
       state.audioRef.src = track.audioUrl
-      state.audioRef.play()
+      console.log('[Audio] Audio src set to:', state.audioRef.src)
+      state.audioRef.play().then(() => {
+        console.log('[Audio] Playing:', track.title)
+      }).catch((err) => {
+        console.error('[Audio] Play error:', err)
+      })
+    } else {
+      console.error('[Audio] No audio ref available')
     }
     set({ currentTrack: track, isPlaying: true })
   },
@@ -43,9 +54,15 @@ export const useMusicStore = create<MusicState>((set, get) => ({
     if (state.audioRef) {
       if (state.isPlaying) {
         state.audioRef.pause()
+        console.log('[Audio] Paused')
       } else {
-        state.audioRef.play()
+        state.audioRef.play().catch((err) => {
+          console.error('[Audio] Play error:', err)
+        })
+        console.log('[Audio] Resumed')
       }
+    } else {
+      console.error('[Audio] No audio ref available')
     }
     set({ isPlaying: !state.isPlaying })
   },

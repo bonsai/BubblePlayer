@@ -10,13 +10,36 @@ export default function App() {
 
   useEffect(() => {
     if (audioRef.current) {
+      console.log('[App] Setting audio ref')
       setAudioRef(audioRef.current)
+      
+      // デバッグイベントリスナー
+      audioRef.current.addEventListener('play', () => {
+        console.log('[Audio Event] play')
+      })
+      audioRef.current.addEventListener('pause', () => {
+        console.log('[Audio Event] pause')
+      })
+      audioRef.current.addEventListener('ended', () => {
+        console.log('[Audio Event] ended')
+      })
+      audioRef.current.addEventListener('error', (e) => {
+        console.error('[Audio Event] error:', e)
+      })
+      audioRef.current.addEventListener('canplay', () => {
+        console.log('[Audio Event] canplay')
+      })
     }
   }, [setAudioRef])
 
   return (
     <>
-      <audio ref={audioRef} crossOrigin="anonymous" />
+      <audio 
+        ref={audioRef} 
+        crossOrigin="anonymous"
+        onLoadStart={() => console.log('[Audio] Loading...')}
+        onLoadedData={() => console.log('[Audio] Data loaded')}
+      />
       
       <Canvas
         camera={{ position: [0, 2, 5], fov: 50 }}
