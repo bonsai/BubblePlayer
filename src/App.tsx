@@ -1,14 +1,23 @@
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Environment } from '@react-three/drei'
 import { BubbleRecordPlayer } from './BubbleRecordPlayer'
-import { useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { useMusicStore, Track } from './store'
 
 export default function App() {
-  const { isPlaying, currentTrack, togglePlay } = useMusicStore()
+  const { isPlaying, currentTrack, togglePlay, setAudioRef } = useMusicStore()
+  const audioRef = useRef<HTMLAudioElement>(null)
+
+  useEffect(() => {
+    if (audioRef.current) {
+      setAudioRef(audioRef.current)
+    }
+  }, [setAudioRef])
 
   return (
     <>
+      <audio ref={audioRef} crossOrigin="anonymous" />
+      
       <Canvas
         camera={{ position: [0, 2, 5], fov: 50 }}
         gl={{ antialias: true, alpha: true }}

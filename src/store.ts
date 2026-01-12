@@ -4,15 +4,17 @@ export interface Track {
   id: number
   title: string
   color: string
-  audioUrl: string // ダミー
+  audioUrl: string
 }
 
 interface MusicState {
   tracks: Track[]
   currentTrack: Track | null
   isPlaying: boolean
+  audioRef: HTMLAudioElement | null
   setCurrentTrack: (track: Track) => void
   togglePlay: () => void
+  setAudioRef: (ref: HTMLAudioElement) => void
 }
 
 const TRACKS: Track[] = [
@@ -22,10 +24,29 @@ const TRACKS: Track[] = [
   { id: 4, title: 'Dubby DNB', color: '#9775FA', audioUrl: '/tracks/track4.wav' },
 ]
 
-export const useMusicStore = create<MusicState>((set) => ({
+export const useMusicStore = create<MusicState>((set, get) => ({
   tracks: TRACKS,
   currentTrack: TRACKS[0],
   isPlaying: false,
-  setCurrentTrack: (track) => set({ currentTrack: track, isPlaying: true }),
-  togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
+  audioRef: null,
+  setAudioRef: (ref) => set({ audioRef: ref }),
+  setCurrentTrack: (track) => {
+    const state = get()
+    if (state.audioRef) {
+      state.audioRef.src = track.audioUrl
+      state.audioRef.play()
+    }
+    set({ currentTrack: track, isPlaying: true })
+  },
+  togglePlay: () => {
+    const state = get()
+    if (state.audioRef) {
+      if (state.isPlaying) {
+        state.audioRef.pause()
+      } else {
+        state.audioRef.play()
+      }
+    }
+    set({ isPlaying: !state.isPlaying })
+  },
 }))

@@ -4,28 +4,32 @@ import * as THREE from 'three'
 import { Sphere, MeshTransmissionMaterial, Text, useTexture } from '@react-three/drei'
 import { useMusicStore, Track } from './store'
 
-// 流体テクスチャを生成
-function createFluidTexture() {
+// 虹色流体テクスチャを生成
+function createRainbowFluidTexture() {
   const canvas = document.createElement('canvas')
   canvas.width = 256
   canvas.height = 256
   const ctx = canvas.getContext('2d')!
   
-  // グラデーション背景
+  // 虹色グラデーション背景
   const gradient = ctx.createLinearGradient(0, 0, 256, 256)
-  gradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)')
-  gradient.addColorStop(0.5, 'rgba(200, 200, 255, 0.2)')
-  gradient.addColorStop(1, 'rgba(255, 255, 255, 0.3)')
+  gradient.addColorStop(0, 'rgba(255, 0, 0, 0.3)')
+  gradient.addColorStop(0.2, 'rgba(255, 127, 0, 0.3)')
+  gradient.addColorStop(0.4, 'rgba(255, 255, 0, 0.3)')
+  gradient.addColorStop(0.6, 'rgba(0, 255, 0, 0.3)')
+  gradient.addColorStop(0.8, 'rgba(0, 0, 255, 0.3)')
+  gradient.addColorStop(1, 'rgba(139, 0, 255, 0.3)')
   ctx.fillStyle = gradient
   ctx.fillRect(0, 0, 256, 256)
   
   // ノイズパターン
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < 150; i++) {
     const x = Math.random() * 256
     const y = Math.random() * 256
-    const size = Math.random() * 30 + 10
-    const opacity = Math.random() * 0.3 + 0.1
-    ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`
+    const size = Math.random() * 40 + 15
+    const opacity = Math.random() * 0.4 + 0.15
+    const hue = Math.random() * 360
+    ctx.fillStyle = `hsla(${hue}, 100%, 50%, ${opacity})`
     ctx.beginPath()
     ctx.arc(x, y, size, 0, Math.PI * 2)
     ctx.fill()
@@ -46,10 +50,8 @@ interface FloatingBubbleProps {
 
 function FloatingBubble({ track, position, delay, onSelect }: FloatingBubbleProps) {
   const meshRef = useRef<THREE.Mesh>(null)
-  const fluidRef = useRef<THREE.Mesh>(null)
   const time = useRef(delay)
   const [hovered, setHovered] = useState(false)
-  const fluidTexture = useMemo(() => createFluidTexture(), [])
   
   useFrame((state, delta) => {
     if (!meshRef.current) return
@@ -72,12 +74,6 @@ function FloatingBubble({ track, position, delay, onSelect }: FloatingBubbleProp
       new THREE.Vector3(targetScale, targetScale, targetScale),
       delta * 5
     )
-    
-    // 流体の回転
-    if (fluidRef.current) {
-      fluidRef.current.rotation.z += delta * 0.5
-      fluidRef.current.rotation.x += delta * 0.2
-    }
   })
 
   const handleClick = (e: ThreeEvent<MouseEvent>) => {
@@ -110,24 +106,6 @@ function FloatingBubble({ track, position, delay, onSelect }: FloatingBubbleProp
         />
       </Sphere>
       
-      {/* 内部の流体エフェクト */}
-      <Sphere 
-        ref={fluidRef}
-        args={[0.23, 32, 32]} 
-        position={position}
-        scale={0.95}
-      >
-        <meshStandardMaterial
-          map={fluidTexture}
-          color={track.color}
-          emissive={track.color}
-          emissiveIntensity={hovered ? 1.5 : 0.6}
-          transparent
-          opacity={0.4}
-          side={THREE.BackSide}
-        />
-      </Sphere>
-      
       {hovered && (
         <Text
           position={[position[0], position[1] - 0.5, position[2]]}
@@ -148,7 +126,7 @@ function RecordBubble({ track, isPlaying }: { track: Track; isPlaying: boolean }
   const bubbleRef = useRef<THREE.Mesh>(null)
   const fluidRef = useRef<THREE.Mesh>(null)
   const time = useRef(0)
-  const fluidTexture = useMemo(() => createFluidTexture(), [])
+  const fluidTexture = useMemo(() => createRainbowFluidTexture(), [])
   
   useFrame((state, delta) => {
     if (!groupRef.current || !bubbleRef.current) return
@@ -226,13 +204,13 @@ function RecordBubble({ track, isPlaying }: { track: Track; isPlaying: boolean }
           distortion={0.5}
           distortionScale={0.6}
           temporalDistortion={0.2}
-          color={track.color}
-          emissive={track.color}
+          color="#ffffff"
+          emissive="#ffffff"
           emissiveIntensity={isPlaying ? 2 : 0.5}
         />
       </Sphere>
       
-      {/* 内部の流体エフェクト */}
+      {/* 内部の虹色流体エフェクト */}
       <Sphere 
         ref={fluidRef}
         args={[0.55, 32, 32]} 
@@ -241,11 +219,10 @@ function RecordBubble({ track, isPlaying }: { track: Track; isPlaying: boolean }
       >
         <meshStandardMaterial
           map={fluidTexture}
-          color={track.color}
-          emissive={track.color}
-          emissiveIntensity={isPlaying ? 1.2 : 0.4}
+          emissive="#ffffff"
+          emissiveIntensity={isPlaying ? 1.5 : 0.6}
           transparent
-          opacity={0.5}
+          opacity={0.6}
           side={THREE.BackSide}
         />
       </Sphere>
