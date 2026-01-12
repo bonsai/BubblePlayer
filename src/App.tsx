@@ -5,7 +5,7 @@ import { useEffect, useRef } from 'react'
 import { useMusicStore, Track } from './store'
 
 export default function App() {
-  const { isPlaying, currentTrack, togglePlay, setAudioRef } = useMusicStore()
+  const { isPlaying, currentTrack, togglePlay, setAudioRef, tracks } = useMusicStore()
   const audioRef = useRef<HTMLAudioElement>(null)
 
   useEffect(() => {
@@ -32,11 +32,23 @@ export default function App() {
     }
   }, [setAudioRef])
 
+  // 音声ファイルをプリロード
+  useEffect(() => {
+    console.log('[App] Preloading audio files...')
+    tracks.forEach((track) => {
+      const audio = new Audio()
+      audio.src = track.audioUrl
+      audio.preload = 'auto'
+      console.log('[App] Preloading:', track.title, track.audioUrl)
+    })
+  }, [tracks])
+
   return (
     <>
       <audio 
         ref={audioRef} 
         crossOrigin="anonymous"
+        preload="auto"
         onLoadStart={() => console.log('[Audio] Loading...')}
         onLoadedData={() => console.log('[Audio] Data loaded')}
       />
